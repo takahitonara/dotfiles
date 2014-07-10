@@ -1,0 +1,33 @@
+(source "gnu" "http://elpa.gnu.org/packages/")
+(source "melpa" "http://melpa.milkbox.net/packages/")
+(source "marmalade" "http://marmalade-repo.org/packages/")
+(source "org" "http://orgmode.org/elpa/")
+
+;; helm
+(depends-on "helm")
+(depends-on "recentf")
+;;(depends-on "helm-c-moccur")
+;;(depends-on "helm-ag")
+;;(depends-on "helm-descbinds")
+
+;; powerline
+(depends-on "powerline")
+
+
+
+;; git-gutter
+(depends-on "git-gutter")
+
+;; color-theme
+(depends-on "zenburn-theme")
+
+;; open-junk-file
+(depends-on "open-junk-file")
+
+
+;; Coding
+(depends-on "yasnippet")
+(depends-on "flycheck")
+
+;; highlight current word
+(depends-on "auto-highlight-symbol")
