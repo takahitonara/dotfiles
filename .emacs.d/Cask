@@ -6,14 +6,9 @@
 ;; helm
 (depends-on "helm")
 (depends-on "recentf")
-;;(depends-on "helm-c-moccur")
-;;(depends-on "helm-ag")
-;;(depends-on "helm-descbinds")
 
 ;; powerline
 (depends-on "powerline")
-
-
 
 ;; git-gutter
 (depends-on "git-gutter")
@@ -24,10 +19,8 @@
 ;; open-junk-file
 (depends-on "open-junk-file")
 
-
 ;; Coding
 (depends-on "yasnippet")
 (depends-on "flycheck")
-
 ;; highlight current word
 (depends-on "auto-highlight-symbol")
