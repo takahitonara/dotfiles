@@ -4,19 +4,31 @@
 ;; スタートアップページを表示しない
 (setq inhibit-startup-message t)
 
-
 ;; ====================================
 ;; Key bindings
 ;; ====================================
 ;; Set C-h delete key
 (global-set-key "\C-h" 'delete-backward-char)
 
+
+
+
+
 ;; ====================================
 ;; Setting GUI
 ;; ====================================
 (custom-set-variables
-  '(auto-save-default nil)
-  '(global-linum-mode t))
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(auto-save-default nil)
+ '(custom-safe-themes
+   (quote
+    ("4aee8551b53a43a883cb0b7f3255d6859d766b6c5e14bcb01bed572fcbef4328" default)))
+ '(global-linum-mode t))
+
+
 
 ;; ====================================
 ;; Backup file setting
@@ -26,12 +38,66 @@
 ;;; .#* とかのバックアップファイルを作らない
 ;;(setq auto-save-default nil)
 
+
+;; ====================================
+;; Change Command key to Meta key
+;; ====================================
+(setq ns-command-modifier (quote meta))
+
+
+;; ====================================
+;; Translucent
+;; ====================================
+(if window-system 
+    (progn
+      (set-frame-parameter nil 'alpha 95)))
+
+
+
+;; ====================================
+;; Use El-Get
+;; ====================================
+(add-to-list 'load-path (locate-user-emacs-file "el-get/el-get"))
+(unless (require 'el-get nil 'noerror)
+  (with-current-buffer
+      (url-retrieve-synchronously
+       "https://raw.githubusercontent.com/dimitri/el-get/master/el-get-install.el")
+    (goto-char (point-max))
+    (eval-print-last-sexp)))
+
+
+
+;; ====================================
+;; powerline
+;; ====================================
+(el-get-bundle powerline)
+(require 'powerline)
+(powerline-default-theme)
+
+;; ====================================
+;; color theme
+;; ====================================
+(el-get-bundle color-theme-sanityinc-solarized)
+(require 'color-theme-sanityinc-solarized)
+(load-theme 'sanityinc-solarized-dark t)
+
+
+
 ;; ====================================
 ;; howm
 ;; ====================================
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/howm/")
+;; リンクを TAB で辿る
+(el-get-bundle howm)
+
 (setq howm-menu-lang 'ja)
-(require 'howm)
+(global-set-key "\C-c,," 'howm-menu)
+(mapc
+  (lambda (f)
+   (autoload f
+     "howm" "Hitori Otegaru Wiki Modoki" t))
+ '(howm-menu howm-list-all howm-list-recent
+             howm-list-grep howm-create
+             howm-keyword-to-kill-ring))
 
 ;; リンクを TAB で辿る
 (eval-after-load "howm-mode"
@@ -44,6 +110,9 @@
 (setq howm-list-all-title t)
 ;; メニューを 2 時間キャッシュ
 (setq howm-menu-expiry-hours 2)
+
+;; howm の時は auto-fill で
+(add-hook 'howm-mode-on-hook 'auto-fill-mode)
 
 ;; RET でファイルを開く際, 一覧バッファを消す
 ;; C-u RET なら残る
@@ -61,7 +130,7 @@
 ;; 1 メモ 1 ファイル (デフォルト)
 (setq howm-file-name-format "%Y/%m/%Y-%m-%d-%H%M%S.howm")
 ;; 1 日 1 ファイルであれば
-;; (setq howm-file-name-format "%Y/%m/%Y-%m-%d.howm")
+(setq howm-file-name-format "%Y/%m/%Y-%m-%d.howm")
 
 (setq howm-view-grep-parse-line
       "^\\(\\([a-zA-Z]:/\\)?[^:]*\\.howm\\):\\([0-9]*\\):\\(.*\\)$")
@@ -83,6 +152,7 @@
     (delete-file
      (buffer-file-name (current-buffer)))))
 
+;; http://howm.sourceforge.jp/cgi-bin/hiki/hiki.cgi?SaveAndKillBuffer
 ;; C-cC-c で保存してバッファをキルする
 (defun my-save-and-kill-buffer ()
   (interactive)
@@ -97,20 +167,36 @@
      (define-key howm-mode-map
        "\C-c\C-c" 'my-save-and-kill-buffer)))
 
-;; ====================================
-;; cask
-;; ====================================
-(require 'cask "~/.cask/cask.el")
-(cask-initialize)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; server start for emacs-client
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'server)
+(unless (server-running-p)
+  (server-start))
 
-;;複数ウィンドウを開かないようにする
-;;(setq ns-pop-up-frames nil)
 
-(if window-system (server-start))
 
-;; ====================================
-;; helm
-;; ====================================
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; disable menu bar
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(tool-bar-mode 0)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; disable tool bar
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(menu-bar-mode 0)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; sr-speedbar
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(el-get-bundle sr-speedbar)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; helm setting
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(el-get-bundle helm)
+
 (when (require 'helm-config nil t)
   (helm-mode 1)
 
@@ -155,96 +241,123 @@
                       (concat ".*" input-pattern)))))))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; migemo
+;; http://qiita.com/catatsuy/items/c5fa34ead92d496b8a51
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(el-get-bundle migemo)
 
-;; ====================================
-;; powerline
-;; ====================================
-(require 'powerline)
-(powerline-default-theme)
+(require 'migemo)
+(setq migemo-command "/usr/local/bin/cmigemo")
+(setq migemo-options '("-q" "--emacs"))
+(setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict")
 
-
-;; ====================================
-;; howm
-;; ====================================
-;; リンクを TAB で辿る
-(eval-after-load "howm-mode"
-  '(progn
-     (define-key howm-mode-map [tab] 'action-lock-goto-next-link)
-     (define-key howm-mode-map [(meta tab)] 'action-lock-goto-previous-link)))
-
-;; メニューを 2 時間キャッシュ
-(setq howm-menu-expiry-hours 2)
-
-;; RET でファイルを開く際, 一覧バッファを消す
-;; C-u RET なら残る
-(setq howm-view-summary-persistent nil)
-
-;; メニューの予定表の表示範囲
-;; 10 日前から
-(setq howm-menu-schedule-days-before 10)
-;; 3 日後まで
-(setq howm-menu-schedule-days 3)
-
-;; いちいち消すのも面倒なので
-;; 内容が 0 ならファイルごと削除する
-(if (not (memq 'delete-file-if-no-contents after-save-hook))
-    (setq after-save-hook
-          (cons 'delete-file-if-no-contents after-save-hook)))
-(defun delete-file-if-no-contents ()
-  (when (and
-         (buffer-file-name (current-buffer))
-         (string-match "\\.howm" (buffer-file-name (current-buffer)))
-         (= (point-min) (point-max)))
-    (delete-file
-     (buffer-file-name (current-buffer)))))
+(setq migemo-user-dictionary nil)
+(setq migemo-regex-dictionary nil)
+(setq migemo-coding-system 'utf-8-unix)
+(load-library "migemo")
+(migemo-init)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; disable menu bar
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(tool-bar-mode 0)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; markdown
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(el-get-bundle markdown-mode)
+(require 'markdown-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; disable tool bar
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(menu-bar-mode 0)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; git-gutter-mode
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(global-git-gutter-mode t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; zenburn
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(load-theme 'zenburn t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; high light current line
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defface hlline-face
-  '((((class color)
-      (background dark))
-     (:background "dark slate gray"))
-    (((class color)
-      (background light))
-     (:background  "#98FB98"))
-    (t
-     ()))
-  "*Face used by hl-line.")
-(setq hl-line-face 'hlline-face)
-(global-hl-line-mode)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; open-junk-file
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(el-get-bundle open-junk-file)
 (require 'open-junk-file)
-(setq open-junk-file-format "~/.junk/%Y-%m-%d-%H%M%S.")
-(global-set-key (kbd "C-x j") 'open-junk-file)
+(setq open-junk-file-format "~/Documents/junk/%Y-%m%d-%H%M%S.")
+(global-set-key "\C-xj" 'open-junk-file)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; auto-highlight-symbol-config
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'auto-highlight-symbol)
-(global-auto-highlight-symbol-mode t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; org-install
+;;
+;; http://blog.wameiz.com/blog/2014/11/27/emacs-start-org/
+;; http://orgmode.org/ja/index.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'org-install)
+;;(setq org-startup-truncated nil)
+;;(setq org-return-follows-link t)
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+(setq org-directory "~/Documents/org/")
+(setq org-default-notes-file (concat org-directory "agenda.org"))
+
+(setq org-capture-templates
+      '(("t" "Todo" entry
+         (file+headline "~/Documents/org/tasks.org" "Tasks")
+         "** TODO %?\n    %i\n    %a\n\n    %U")
+        ("m" "Memo" entry
+         (file+headline "~/Documents/org/memos.org" "Memos")
+         "** %?\n   %i\n   %a\n\n   %U")
+        ("d" "Dialy" entry
+         (file+headline "~/Documents/org/dialies.org" "Dialies")
+         "** %?\n   %i\n\n   %U")))
+
+(setq org-agenda-files (list org-directory)) ;agendaを使うため
+
+;; ショートカットキー
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-co" 'org-capture)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cb" 'org-iswitchb)
+
+(add-hook 'org-mode-hook 'turn-on-font-lock)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; elixir
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(el-get-bundle elixir)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 空白文字を強制表示
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq-default show-trailing-whitespace t)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; カーソルのある行をハイライトする
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(global-hl-line-mode t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 全角・タブを可視化
+;; http://weboo-returns.com/blog/emacs-shows-double-space-and-tab/
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq whitespace-style
+      '(tabs tab-mark spaces space-mark))
+(setq whitespace-space-regexp "\\(\x3000+\\)")
+(setq whitespace-display-mappings
+      '((space-mark ?\x3000 [?\])
+        (tab-mark   ?\t   [?\xBB ?\t])
+        ))
+(require 'whitespace)
+(global-whitespace-mode 1)
+(set-face-foreground 'whitespace-space "LightSlateGray")
+(set-face-background 'whitespace-space "DarkSlateGray")
+(set-face-foreground 'whitespace-tab "LightSlateGray")
+(set-face-background 'whitespace-tab "DarkSlateGray")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 折り返し切り替え
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(global-set-key (kbd "C-c t") 'toggle-truncate-lines)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; スクロールを一行ずつにする
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq scroll-step 1)
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
